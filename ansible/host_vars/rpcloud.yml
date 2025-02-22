@@ -1,0 +1,3 @@
+ansible_host: rpcloud
+ansible_user: ubuntu
+ansible_password: admin123

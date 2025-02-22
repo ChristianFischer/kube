@@ -1,0 +1,44 @@
+{
+  "name": "Kubernetes Development Environment",
+  "dockerFile": "Dockerfile",
+  "updateRemoteUserUID": true,
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "kubectl": "latest",
+      "helm": "latest",
+      "minikube": "none"
+    },
+    "ghcr.io/devcontainers-extra/features/ansible": {
+      "version": "latest"
+    }
+  },
+  "postCreateCommand": "kubectl version && helm version",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true
+      },
+      "extensions": [
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "ms-azuretools.vscode-docker"
+      ]
+    },
+    "intellij": {
+      "settings": {
+        "editor.formatOnSave": true,
+        "kubernetes:enabled": true,
+        "docker:enabled": true
+      }
+    }
+  },
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=${env:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind",
+    "source=${env:HOME}/.ssh,target=/home/vscode/.ssh,type=bind"
+  ]
+}

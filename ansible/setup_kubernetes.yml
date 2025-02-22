@@ -1,0 +1,123 @@
+---
+- name: Install Kubernetes
+  hosts: master
+  become: true
+
+  tasks:
+    - name: disable SWAP (Kubeadm requirement)
+      shell: |
+        swapoff -a
+
+    - name: disable SWAP in fstab (Kubeadm requirement)
+      replace:
+        path: /etc/fstab
+        regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+        replace: '# \1'
+
+    - name: create an empty file for Kubernetes sysctl params
+      copy:
+        content: ""
+        dest: /etc/sysctl.d/99-kubernetes-cri.conf
+        force: no
+
+    - name: configure sysctl params for Kubernetes
+      lineinfile:
+        path: /etc/sysctl.d/99-kubernetes-cri.conf
+        line: "{{ item }}"
+      with_items:
+        - 'net.bridge.bridge-nf-call-iptables  = 1'
+        - 'net.ipv4.ip_forward                 = 1'
+        - 'net.bridge.bridge-nf-call-ip6tables = 1'
+
+    - name: apply sysctl params without reboot
+      command: sysctl --system
+
+    - name: add Kubernetes apt-key
+      get_url:
+        url: https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key
+        dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        mode: '0644'
+        force: true
+
+    - name: Add Kubenetes Repository
+      apt_repository:
+        repo: 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /'
+        state: present
+        update_cache: yes
+
+    - name: add Helm apt-key'
+      get_url:
+        url: https://baltocdn.com/helm/signing.asc
+        dest: /etc/apt/keyrings/helm.asc
+        mode: '0644'
+        force: true
+
+    - name: Add Helm Repository
+      apt_repository:
+        repo: 'deb [signed-by=/etc/apt/keyrings/helm.asc] https://baltocdn.com/helm/stable/debian/ all main'
+        state: present
+        update_cache: yes
+
+    - name: Install Kubernetes
+      apt:
+        name:
+          - helm
+          - kubeadm
+          - kubectl
+          - kubelet
+          - python3-kubernetes
+        state: present
+
+    - name: Enable Kubelet service
+      service:
+        name: kubelet
+        enabled: yes
+
+    - name: Install helm diff plugin
+      become: yes
+      become_user: ubuntu
+      command: helm plugin install https://github.com/databus23/helm-diff
+      args:
+        creates: ~/.local/share/helm/plugins/helm-diff
+
+    - name: Init Kubernetes Cluster
+      command: kubeadm init --pod-network-cidr={{ cluster_cidr }}
+      args:
+        creates: /etc/kubernetes/admin.conf
+
+    - name: create .kube directory
+      become: yes
+      become_user: ubuntu
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/ubuntu/.kube/config
+        remote_src: yes
+        owner: ubuntu
+        mode: 0600
+
+    - name: Setup alias k=kubectl
+      become: yes
+      become_user: ubuntu
+      lineinfile:
+        path: ~/.bashrc
+        line: 'alias k="kubectl"'
+        insertafter: EOF
+
+    - name: Copy admin.conf from target system to local machine
+      fetch:
+        src: /etc/kubernetes/admin.conf
+        dest: ~/.kube/config
+        flat: true
+        mode: 0600
+
+    # allow to run pods on the master node itself
+    #- name: Remove Taint NoSchedule
+    #  become: yes
+    #  become_user: ubuntu
+    #  command: 'kubectl taint nodes --all node-role.kubernetes.io/control-plane:NoSchedule-'
