@@ -54,7 +54,7 @@ metadata:
   namespace: kubernetes-dashboard
 type: Opaque
 data:
-  csrf: ""
+  csrf: "MTIzNDU2Nzg5MDEyMzQ1Ng=="
 ---
 apiVersion: v1
 kind: Secret
@@ -83,8 +83,15 @@ spec:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
         effect: NoSchedule
-      nodeSelector:
-        kubernetes.io/hostname: rpcloud
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - rpcloud
       containers:
         - name: kubernetes-dashboard
           image: kubernetesui/dashboard:v2.7.0
@@ -101,11 +108,11 @@ spec:
               mountPath: /tmp
           resources:
             requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
               cpu: "100m"
               memory: "128Mi"
-            limits:
-              cpu: "200m"
-              memory: "256Mi"
           livenessProbe:
             httpGet:
               scheme: HTTPS
@@ -150,6 +157,8 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: "kubernetes-dashboard-dashboard-auth@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.tls.certresolver: "default"
 spec:
   rules:
     - host: dashboard.rpcloud

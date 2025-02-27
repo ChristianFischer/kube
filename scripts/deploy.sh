@@ -68,9 +68,39 @@ kubectl wait --namespace kube-system --for=condition=ready pod --selector=app=tr
     exit 1
 }
 
-# Deploy Kubernetes Dashboard
+# Generate secure password for dashboard
+echo "Generating secure password for dashboard access..."
+DASHBOARD_PASSWORD=$(openssl rand -base64 12)
+DASHBOARD_AUTH=$(echo -n "admin:$(openssl passwd -apr1 $DASHBOARD_PASSWORD)" | base64)
+
+# Create auth secret
+echo "Creating dashboard auth middleware..."
+cat > manifests/ingress/dashboard-auth-middleware.yml << EOF
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: dashboard-auth
+  namespace: kubernetes-dashboard
+spec:
+  basicAuth:
+    secret: dashboard-auth-secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dashboard-auth-secret
+  namespace: kubernetes-dashboard
+type: Opaque
+data:
+  users: |2
+    $DASHBOARD_AUTH
+EOF
+
+# Deploy Kubernetes Dashboard and auth middleware
 echo "Deploying Kubernetes Dashboard..."
-kubectl apply -f manifests/apps/kubernetes-dashboard.yml
+deploy_with_retry manifests/ingress/dashboard-auth-middleware.yml
+deploy_with_retry manifests/apps/kubernetes-dashboard.yml
 echo "Waiting for Kubernetes Dashboard to be ready..."
 kubectl wait --namespace kubernetes-dashboard --for=condition=ready pod --selector=k8s-app=kubernetes-dashboard --timeout=90s
 
@@ -116,5 +146,10 @@ To access the Kubernetes Dashboard:
 3. Use the token printed above to log in
 
 Note: You might need to accept the self-signed certificate in your browser.
+
+Basic Auth Credentials for Dashboard:
+Username: admin
+Password: $DASHBOARD_PASSWORD
+
 ===========================================
 "

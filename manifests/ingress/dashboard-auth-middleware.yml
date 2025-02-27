@@ -1,0 +1,19 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: dashboard-auth
+  namespace: kubernetes-dashboard
+spec:
+  basicAuth:
+    secret: dashboard-auth-secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dashboard-auth-secret
+  namespace: kubernetes-dashboard
+type: Opaque
+data:
+  users: |2
+    YWRtaW46JGFwcjEkVVVVVVVVVVUkVVVVVVVVVVVVVVVVVVVVVVVVVVU=
