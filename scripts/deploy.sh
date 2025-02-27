@@ -1,18 +1,72 @@
 #!/bin/bash
+set -e
+
+# Function to check if kubectl is available
+check_kubectl() {
+    if ! command -v kubectl &> /dev/null; then
+        echo "Error: kubectl is not installed or not in PATH"
+        exit 1
+    fi
+}
+
+# Function to check if cluster is accessible
+check_cluster() {
+    if ! kubectl cluster-info &> /dev/null; then
+        echo "Error: Unable to connect to Kubernetes cluster"
+        exit 1
+    fi
+}
+
+# Function to deploy with retry
+deploy_with_retry() {
+    local manifest=$1
+    local max_attempts=3
+    local attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
+        if kubectl apply -f "$manifest"; then
+            return 0
+        fi
+        echo "Attempt $attempt failed. Retrying in 5 seconds..."
+        sleep 5
+        attempt=$((attempt + 1))
+    done
+
+    echo "Error: Failed to deploy $manifest after $max_attempts attempts"
+    return 1
+}
+
+echo "Checking prerequisites..."
+check_kubectl
+check_cluster
 
 echo "Deploying Kubernetes components..."
 
 # Deploy Flannel CNI
 echo "Deploying Flannel CNI..."
-kubectl apply -f manifests/networking/kube-flannel.yml
+deploy_with_retry manifests/networking/kube-flannel.yml
 echo "Waiting for Flannel to be ready..."
-kubectl wait --namespace kube-flannel --for=condition=ready pod --selector=app=flannel --timeout=90s
+kubectl wait --namespace kube-flannel --for=condition=ready pod --selector=app=flannel --timeout=90s || {
+    echo "Error: Flannel pods not ready after 90 seconds"
+    exit 1
+}
+
+# Deploy Traefik CRDs first
+echo "Deploying Traefik CRDs..."
+deploy_with_retry manifests/ingress/traefik-crds.yml
+
+# Wait for CRDs to be established
+echo "Waiting for Traefik CRDs to be established..."
+sleep 5
 
 # Deploy Traefik Ingress Controller
 echo "Deploying Traefik Ingress Controller..."
-kubectl apply -f manifests/ingress/traefik.yml
+deploy_with_retry manifests/ingress/traefik.yml
 echo "Waiting for Traefik to be ready..."
-kubectl wait --namespace kube-system --for=condition=ready pod --selector=app=traefik --timeout=90s
+kubectl wait --namespace kube-system --for=condition=ready pod --selector=app=traefik --timeout=90s || {
+    echo "Error: Traefik pods not ready after 90 seconds"
+    exit 1
+}
 
 # Deploy Kubernetes Dashboard
 echo "Deploying Kubernetes Dashboard..."
@@ -57,7 +111,7 @@ To access the Kubernetes Dashboard:
    $(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}') dashboard.rpcloud
 
 2. Access the dashboard at:
-   https://dashboard.rpcloud:30443
+   https://dashboard.rpcloud:32443
 
 3. Use the token printed above to log in
 

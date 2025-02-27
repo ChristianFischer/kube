@@ -37,6 +37,24 @@ rules:
       - ingresses/status
     verbs:
       - update
+  - apiGroups:
+      - traefik.io
+      - traefik.containo.us
+    resources:
+      - ingressroutes
+      - ingressroutetcps
+      - ingressrouteudps
+      - middlewares
+      - middlewaretcps
+      - middlewareudps
+      - tlsoptions
+      - tlsstores
+      - serverstransports
+      - traefikservices
+    verbs:
+      - get
+      - list
+      - watch
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -60,17 +78,27 @@ data:
   traefik.yaml: |
     api:
       dashboard: true
-      insecure: true
+      insecure: false
+    ping: {}
+    metrics:
+      prometheus: {}
     entryPoints:
       web:
         address: ":80"
       websecure:
         address: ":443"
+      ping:
+        address: ":8082"
     providers:
       kubernetesCRD: {}
       kubernetesIngress: {}
     log:
       level: INFO
+    accessLog: {}
+    security:
+      ssl:
+        enabled: true
+        permanent: true
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -90,11 +118,22 @@ spec:
         app: traefik
     spec:
       serviceAccountName: traefik-ingress-controller
-      nodeSelector:
-        kubernetes.io/hostname: rpcloud
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - rpcloud
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
       containers:
         - name: traefik
-          image: traefik:v2.10
+          image: traefik:v2.11.0
           args:
             - --configfile=/etc/traefik/traefik.yaml
           ports:
@@ -104,6 +143,25 @@ spec:
               containerPort: 443
             - name: admin
               containerPort: 8080
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "50Mi"
+            limits:
+              cpu: "200m"
+              memory: "100Mi"
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8082
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8082
+            initialDelaySeconds: 15
+            periodSeconds: 20
           volumeMounts:
             - name: config
               mountPath: /etc/traefik
@@ -123,14 +181,14 @@ spec:
     - protocol: TCP
       name: web
       port: 80
-      nodePort: 30080
+      nodePort: 31080
     - protocol: TCP
       name: websecure
       port: 443
-      nodePort: 30443
+      nodePort: 31443
     - protocol: TCP
       name: admin
       port: 8080
-      nodePort: 30808
+      nodePort: 31808
   selector:
     app: traefik

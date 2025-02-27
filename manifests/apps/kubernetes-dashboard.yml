@@ -79,6 +79,12 @@ spec:
       labels:
         k8s-app: kubernetes-dashboard
     spec:
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      nodeSelector:
+        kubernetes.io/hostname: rpcloud
       containers:
         - name: kubernetes-dashboard
           image: kubernetesui/dashboard:v2.7.0
@@ -93,12 +99,26 @@ spec:
               mountPath: /certs
             - name: tmp-volume
               mountPath: /tmp
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
           livenessProbe:
             httpGet:
               scheme: HTTPS
               path: /
               port: 8443
             initialDelaySeconds: 30
+            timeoutSeconds: 30
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /
+              port: 8443
+            initialDelaySeconds: 10
             timeoutSeconds: 30
       volumes:
         - name: kubernetes-dashboard-certs
@@ -114,9 +134,11 @@ metadata:
   name: kubernetes-dashboard
   namespace: kubernetes-dashboard
 spec:
+  type: NodePort
   ports:
     - port: 443
       targetPort: 8443
+      nodePort: 32443
   selector:
     k8s-app: kubernetes-dashboard
 ---
