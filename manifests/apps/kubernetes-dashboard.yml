@@ -1,15 +1,33 @@
+# Kubernetes Dashboard Configuration
+# This manifest file deploys the Kubernetes Dashboard, a web-based UI for managing
+# and monitoring the Kubernetes cluster. It includes all necessary components:
+# - Namespace and RBAC configuration
+# - Dashboard deployment with secure settings
+# - Service and Ingress for access
+
 ---
+# Namespace Definition
+# Creates a dedicated namespace for the Dashboard components
+# This isolation helps with resource organization and access control
 apiVersion: v1
 kind: Namespace
 metadata:
   name: kubernetes-dashboard
 ---
+# ServiceAccount Definition
+# Creates an identity for the Dashboard to operate under
+# This account will be used by the Dashboard pods to interact with the Kubernetes API
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: kubernetes-dashboard
   namespace: kubernetes-dashboard
 ---
+# ClusterRole Definition
+# Defines the permissions for the Dashboard:
+# - Create and manage its own secrets and configmaps for storing certificates and settings
+# - Access metrics services (heapster and dashboard-metrics-scraper)
+# These minimal permissions ensure secure operation of the Dashboard
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -40,6 +58,11 @@ subjects:
     name: kubernetes-dashboard
     namespace: kubernetes-dashboard
 ---
+# Secrets Definition
+# The Dashboard requires three secrets for secure operation:
+# 1. kubernetes-dashboard-certs: Stores TLS certificates for HTTPS
+# 2. kubernetes-dashboard-csrf: Protects against CSRF attacks
+# 3. kubernetes-dashboard-key-holder: Stores encryption keys
 apiVersion: v1
 kind: Secret
 metadata:
@@ -63,6 +86,13 @@ metadata:
   namespace: kubernetes-dashboard
 type: Opaque
 ---
+# Deployment Definition
+# Configures how the Dashboard runs in the cluster:
+# - Uses official dashboard image v2.7.0
+# - Runs with HTTPS enabled (port 8443)
+# - Auto-generates certificates for secure communication
+# - Mounts secrets for certificates and temporary storage
+# - Includes health check (liveness probe) for reliability
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -108,6 +138,11 @@ spec:
           emptyDir: {}
       serviceAccountName: kubernetes-dashboard
 ---
+# Service Definition
+# Exposes the Dashboard within the cluster:
+# - Creates an internal service endpoint
+# - Routes HTTPS traffic (port 443 -> 8443)
+# - Selects Dashboard pods using k8s-app label
 kind: Service
 apiVersion: v1
 metadata:
@@ -120,6 +155,12 @@ spec:
   selector:
     k8s-app: kubernetes-dashboard
 ---
+# Ingress Definition
+# Configures external access to the Dashboard:
+# - Uses Traefik as the ingress controller
+# - Enables HTTPS (TLS) access
+# - Routes traffic from dashboard.rpcloud to the Dashboard service
+# - Handles path-based routing with prefix matching
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

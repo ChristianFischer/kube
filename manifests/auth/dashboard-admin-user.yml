@@ -1,9 +1,23 @@
+# Dashboard Admin User Configuration
+# This manifest creates an admin user for accessing the Kubernetes Dashboard
+# SECURITY NOTE: This gives full cluster administration privileges
+# Use with caution in production environments
+
+# ServiceAccount Definition
+# Creates a user account in the kubernetes-dashboard namespace
+# This account will be used for Dashboard authentication
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: admin-user
   namespace: kubernetes-dashboard
 ---
+# ClusterRoleBinding Definition
+# Grants cluster-admin privileges to the admin-user ServiceAccount
+# This binding gives the user full control over the entire cluster:
+# - Full access to all resources
+# - Ability to perform any action
+# - Access to all namespaces
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:

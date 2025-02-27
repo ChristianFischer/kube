@@ -1,10 +1,24 @@
+# Traefik Ingress Controller Configuration
+# This manifest file sets up Traefik as the Ingress Controller for the Kubernetes cluster.
+# Traefik handles incoming traffic and routes it to the appropriate services based on rules.
+
 ---
+# ServiceAccount Definition
+# Creates a service account for Traefik that provides an identity for the Traefik pods
+# running in the Kubernetes cluster. This identity is used for authentication and
+# authorization purposes.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: traefik-ingress-controller
   namespace: kube-system
 ---
+# ClusterRole Definition
+# Defines the cluster-wide permissions required by Traefik:
+# - Access to Services, Endpoints, and Secrets for configuration and TLS
+# - Access to Ingress resources for traffic routing configuration
+# - Permission to update Ingress resource status
+# These permissions are necessary for Traefik to function as an Ingress Controller
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -51,6 +65,14 @@ subjects:
     name: traefik-ingress-controller
     namespace: kube-system
 ---
+# ConfigMap Definition
+# Contains Traefik's core configuration:
+# - API and Dashboard settings (enabled on port 8080)
+# - Entry points configuration:
+#   * web: HTTP traffic on port 80
+#   * websecure: HTTPS traffic on port 443
+# - Kubernetes providers configuration for automatic service discovery
+# - Logging level settings
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -72,6 +94,15 @@ data:
     log:
       level: INFO
 ---
+# Deployment Definition
+# Deploys the Traefik Ingress Controller pods:
+# - Uses traefik:v2.10 image
+# - Runs on a specific node (rpcloud) using nodeSelector
+# - Mounts the ConfigMap for configuration
+# - Exposes ports:
+#   * 80: HTTP traffic
+#   * 443: HTTPS traffic
+#   * 8080: Admin dashboard
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -112,6 +143,14 @@ spec:
           configMap:
             name: traefik-config
 ---
+# Service Definition
+# Exposes Traefik to the cluster and external traffic:
+# - Type: NodePort makes Traefik accessible from outside the cluster
+# - Ports exposed:
+#   * 30080: HTTP traffic (forwards to port 80)
+#   * 30443: HTTPS traffic (forwards to port 443)
+#   * 30808: Dashboard access (forwards to port 8080)
+# - Selector matches the Traefik deployment pods
 apiVersion: v1
 kind: Service
 metadata:

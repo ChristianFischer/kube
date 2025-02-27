@@ -1,4 +1,8 @@
+# This manifest file configures Flannel - a Container Network Interface (CNI) for Kubernetes
+# Flannel provides a layer 3 network fabric designed for Kubernetes
+
 ---
+# Create a dedicated namespace for Flannel components
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -6,12 +10,19 @@ metadata:
   labels:
     pod-security.kubernetes.io/enforce: privileged
 ---
+# ServiceAccount: Provides an identity for the Flannel pods to interact with the Kubernetes API
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: flannel
   namespace: kube-flannel
 ---
+# ClusterRole: Defines the permissions that Flannel needs across the cluster
+# These permissions allow Flannel to:
+# - Use pod security policies
+# - Get information about pods
+# - List and watch nodes
+# - Update node status for network configuration
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -54,6 +65,12 @@ subjects:
   name: flannel
   namespace: kube-flannel
 ---
+# ConfigMap: Contains the CNI (Container Network Interface) configuration for Flannel
+# This includes two main configurations:
+# 1. cni-conf.json: Defines the CNI plugins and their settings
+# 2. net-conf.json: Specifies the Flannel network configuration
+#    - Network: Defines the pod network CIDR (10.244.0.0/16)
+#    - Backend: Uses VXLAN for overlay networking
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -88,6 +105,12 @@ data:
       }
     }
 ---
+# DaemonSet: Ensures that all nodes run a copy of the Flannel pod
+# Key components:
+# - Runs with host network privileges
+# - Uses initContainers to install CNI plugins
+# - Main container runs Flannel daemon with network management capabilities
+# - Mounts necessary volumes for CNI configuration and networking
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
