@@ -22,26 +22,7 @@ kubectl wait --namespace kubernetes-dashboard --for=condition=ready pod --select
 
 # Create admin user for dashboard
 echo "Creating admin user for dashboard..."
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: admin-user
-  namespace: kubernetes-dashboard
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: admin-user
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- kind: ServiceAccount
-  name: admin-user
-  namespace: kubernetes-dashboard
-EOF
+kubectl apply -f manifests/auth/dashboard-admin-user.yml
 
 # Get token for dashboard
 echo "Getting token for dashboard login..."
