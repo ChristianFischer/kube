@@ -16,3 +16,5 @@ setup-basic:
 setup-kubernetes:
 	$(ANSIBLE) -i $(INVENTORY) $(ARGS) ansible/setup_kubernetes.yml
 
+reset-cluster:
+	./scripts/reset-cluster.sh
