@@ -1,0 +1,32 @@
+# Traefik Helm values configuration
+deployment:
+  replicas: 1
+  nodeSelector:
+    kubernetes.io/hostname: rpcloud
+
+ports:
+  web:
+    nodePort: 30080
+    port: 10080
+  websecure:
+    nodePort: 30443
+    port: 10443
+  traefik:
+    nodePort: 30808
+    port: 10808
+
+service:
+  type: NodePort
+
+dashboard:
+  enabled: true
+
+providers:
+  kubernetesCRD:
+    enabled: true
+  kubernetesIngress:
+    enabled: true
+
+logs:
+  general:
+    level: INFO

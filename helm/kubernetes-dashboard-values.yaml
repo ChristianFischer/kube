@@ -1,0 +1,48 @@
+# Kubernetes Dashboard Helm Values
+# Maintains configuration equivalent to our previous manifest setup
+
+#ingress:
+#  enabled: true
+#  annotations:
+#    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+#    traefik.ingress.kubernetes.io/router.tls: "true"
+#  hosts:
+#    - rpcloud
+#  paths:
+#    - /dashboard/
+
+# Use the same image version as before
+image:
+  repository: kubernetesui/dashboard
+  tag: v2.7.0
+
+# Security settings
+protocolHttp: false
+extraArgs:
+  - --auto-generate-certificates
+  - --namespace=kubernetes-dashboard
+
+# Resource configuration
+resources:
+  requests:
+    cpu: 100m
+    memory: 200Mi
+  limits:
+    cpu: 2
+    memory: 200Mi
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    - port: 10443
+      targetPort: 8443
+
+# Metrics Scraper configuration
+metricsScraper:
+  enabled: true
+
+# RBAC configuration
+serviceAccount:
+  create: true
+  name: kubernetes-dashboard

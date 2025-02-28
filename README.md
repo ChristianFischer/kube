@@ -1,11 +1,11 @@
-# Kubernetes Cluster Setup with Flannel and Traefik
+# Kubernetes Cluster Setup with Calico and Traefik
 
-This repository contains configuration files for setting up a Kubernetes cluster with Flannel CNI and Traefik Ingress Controller, along with the Kubernetes Dashboard.
+This repository contains Helm charts and configuration files for setting up a Kubernetes cluster with Calico CNI and Traefik Ingress Controller, along with the Kubernetes Dashboard.
 
 ## Components
 
-- **Flannel**: Network overlay for pod networking
-- **Traefik**: Ingress Controller running on master node
+- **Calico**: Container Network Interface (CNI) for pod networking
+- **Traefik**: Ingress Controller running on master node (deployed via Helm)
 - **Kubernetes Dashboard**: Web UI for cluster management
 
 ## Prerequisites
@@ -13,6 +13,7 @@ This repository contains configuration files for setting up a Kubernetes cluster
 - Kubernetes cluster with 1-2 nodes
 - Master node named 'rpcloud'
 - kubectl configured with admin access
+- Helm v3 installed
 
 ## Installation
 
@@ -28,16 +29,17 @@ This repository contains configuration files for setting up a Kubernetes cluster
    ```
 
 The script will:
-- Deploy Flannel CNI
-- Deploy Traefik Ingress Controller
+- Add required Helm repositories
+- Deploy Calico CNI using Helm
+- Deploy Traefik Ingress Controller using Helm
 - Deploy Kubernetes Dashboard
 - Create an admin user for the dashboard
 - Display access instructions and login token
 
 ## Network Configuration
 
-- Flannel Network CIDR: 10.244.0.0/16
-- Traefik Ports:
+- Calico is configured with default IPAM settings
+- Traefik Ports (configured via helm/traefik-values.yaml):
   - HTTP: 30080
   - HTTPS: 30443
   - Admin: 30808
@@ -61,12 +63,13 @@ The script will:
 
 ```
 .
+├── helm/
+│   └── traefik-values.yaml    # Traefik Helm values
 ├── manifests/
-│   ├── networking/     # Flannel CNI configuration
-│   ├── ingress/       # Traefik configuration
-│   └── apps/          # Application manifests (Dashboard)
+│   ├── apps/                  # Application manifests (Dashboard)
+│   └── auth/                  # Authentication configurations
 └── scripts/
-    └── deploy.sh      # Deployment script
+    └── deploy.sh             # Deployment script
 ```
 
 ## Notes
