@@ -20,9 +20,14 @@ helm install traefik traefik/traefik --namespace kube-system -f helm/traefik-val
 echo "Waiting for Traefik to be ready..."
 kubectl wait --namespace kube-system --for=condition=ready pod --selector=app.kubernetes.io/name=traefik --timeout=90s
 
-# Deploy Kubernetes Dashboard
+# Deploy Kubernetes Dashboard using Helm
+echo "Adding Kubernetes Dashboard Helm repository..."
+helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 echo "Deploying Kubernetes Dashboard..."
-kubectl apply -f manifests/apps/kubernetes-dashboard.yml
+helm install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
+  --namespace kubernetes-dashboard \
+  --create-namespace \
+  -f helm/kubernetes-dashboard-values.yaml
 echo "Waiting for Kubernetes Dashboard to be ready..."
 kubectl wait --namespace kubernetes-dashboard --for=condition=ready pod --selector=k8s-app=kubernetes-dashboard --timeout=90s
 
