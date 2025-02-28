@@ -2,17 +2,23 @@
 
 echo "Deploying Kubernetes components..."
 
-# Deploy Flannel CNI
-echo "Deploying Flannel CNI..."
-kubectl apply -f manifests/networking/kube-flannel.yml
-echo "Waiting for Flannel to be ready..."
-kubectl wait --namespace kube-flannel --for=condition=ready pod --selector=app=flannel --timeout=90s
+# Add Helm repositories
+echo "Adding Helm repositories..."
+helm repo add traefik https://helm.traefik.io/traefik
+helm repo add projectcalico https://docs.projectcalico.org/charts
+helm repo update
 
-# Deploy Traefik Ingress Controller
+# Deploy Calico CNI (replacing Flannel)
+echo "Deploying Calico CNI..."
+helm install calico projectcalico/tigera-operator --namespace tigera-operator --create-namespace
+echo "Waiting for Calico to be ready..."
+kubectl wait --namespace calico-system --for=condition=ready pod --selector=k8s-app=calico-node --timeout=90s
+
+# Deploy Traefik Ingress Controller using Helm
 echo "Deploying Traefik Ingress Controller..."
-kubectl apply -f manifests/ingress/traefik.yml
+helm install traefik traefik/traefik --namespace kube-system -f helm/traefik-values.yaml
 echo "Waiting for Traefik to be ready..."
-kubectl wait --namespace kube-system --for=condition=ready pod --selector=app=traefik --timeout=90s
+kubectl wait --namespace kube-system --for=condition=ready pod --selector=app.kubernetes.io/name=traefik --timeout=90s
 
 # Deploy Kubernetes Dashboard
 echo "Deploying Kubernetes Dashboard..."
