@@ -13,6 +13,10 @@ helm repo add projectcalico https://docs.tigera.io/calico/charts
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 helm repo update
 
+# Deploy Ingress route for Kubernetes Dashboard
+echo -e "${TEXT_GREEN}Deploying basic configuration...${TEXT_RESET}"
+kubectl apply -f manifests/storage/rpcloud-persistent-storage.yml
+
 # Deploy Calico CNI (replacing Flannel)
 echo -e "${TEXT_GREEN}Deploying Calico CNI...${TEXT_RESET}"
 $HELM_INSTALL calico projectcalico/tigera-operator --namespace tigera-operator --create-namespace
