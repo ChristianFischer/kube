@@ -7,10 +7,10 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`rpcloud`) && PathPrefix(`/dashboard`)
+    - match: Host(`kubernetes-dashboard.local`)
       kind: Rule
       services:
-        - name: kubernetes-dashboard-web
+        - name: kubernetes-dashboard-kong-proxy
           namespace: kubernetes-dashboard
-          port: 8000
+          port: 443
   tls: {}

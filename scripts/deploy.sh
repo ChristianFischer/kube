@@ -17,11 +17,11 @@ helm repo update
 echo -e "${TEXT_GREEN}Deploying Calico CNI...${TEXT_RESET}"
 $HELM_INSTALL calico projectcalico/tigera-operator --namespace tigera-operator --create-namespace
 
-# Deploy Traefik Ingress Controller using Helm
+# Deploy Traefik Ingress Controller
 echo -e "${TEXT_GREEN}Deploying Traefik Ingress Controller...${TEXT_RESET}"
 $HELM_INSTALL traefik traefik/traefik --namespace kube-system -f helm/traefik-values.yaml
 
-# Deploy Kubernetes Dashboard using Helm
+# Deploy Kubernetes Dashboard
 echo -e "${TEXT_GREEN}Deploying Kubernetes Dashboard...${TEXT_RESET}"
 $HELM_INSTALL kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
   --namespace kubernetes-dashboard \

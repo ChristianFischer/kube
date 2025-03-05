@@ -1,0 +1,57 @@
+---
+- name: Basic software configuration
+  hosts: master
+  become: true
+  tasks:
+    - name: Install Avahi
+      apt:
+        name:
+          - avahi-daemon
+          - avahi-utils
+        state: present
+        update_cache: yes
+
+
+    - name: Create a service to publish alternative hostnames
+      copy:
+        dest: /etc/systemd/system/alias-hostname@.service
+        content: |
+          [Unit]
+          Description=Publish alternative hostname %i
+          After=network-online.target avahi-daemon.service
+          Requires=network-online.target avahi-daemon.service
+
+          [Service]
+          Type=simple
+          ExecStart=/bin/bash -c "sleep 5 && /usr/bin/avahi-publish -a -R %i.local $(avahi-resolve -4 -n %H.local | cut -f 2)"
+
+          [Install]
+          WantedBy=multi-user.target
+
+
+    - name: Enable Avahi service
+      service:
+        name: avahi-daemon
+        enabled: yes
+        state: started
+
+
+    - name: Enable and start Hostname kubernetes-dashboard.local
+      service:
+        name: alias-hostname@kubernetes-dashboard
+        enabled: yes
+        state: started
+
+    - name: Enable Hostname gitlab.local
+      service:
+        name: alias-hostname@gitlab
+        enabled: yes
+        state: started
+
+
+  handlers:
+    - name: Restart Avahi Daemon
+      service:
+        name: avahi-daemon
+        state: restarted
+

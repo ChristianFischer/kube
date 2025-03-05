@@ -23,13 +23,16 @@ connect-ssh: ~/.ssh/id_rsa
 
 # copies the kubernetes config file from the node to the local user folder
 ~/.kube/config: connect-ssh
-	scp ubuntu@rpcloud:/etc/kubernetes/admin.conf ~/.kube/config
+	ssh ubuntu@rpcloud "sudo cat /etc/kubernetes/admin.conf" > ~/.kube/config
 
 connect-kubernetes: ~/.kube/config
 
 
 setup-basic:
 	$(ANSIBLE) -i $(INVENTORY) $(ARGS) ansible/setup_basic.yml
+
+setup-avahi:
+	$(ANSIBLE) -i $(INVENTORY) $(ARGS) ansible/setup_avahi.yml
 
 setup-kubernetes:
 	$(ANSIBLE) -i $(INVENTORY) $(ARGS) ansible/setup_kubernetes.yml
