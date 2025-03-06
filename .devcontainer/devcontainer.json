@@ -16,7 +16,7 @@
       "version": "latest"
     }
   },
-  "postCreateCommand": "kubectl version && helm version",
+  "postCreateCommand": "kubectl version --client=true && helm version",
   "customizations": {
     "vscode": {
       "settings": {

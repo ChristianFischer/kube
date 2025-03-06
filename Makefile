@@ -23,6 +23,7 @@ connect-ssh: ~/.ssh/id_rsa
 
 # copies the kubernetes config file from the node to the local user folder
 ~/.kube/config: connect-ssh
+	mkdir -p ~/.kube/
 	ssh ubuntu@rpcloud "sudo cat /etc/kubernetes/admin.conf" > ~/.kube/config
 
 connect-kubernetes: ~/.kube/config
