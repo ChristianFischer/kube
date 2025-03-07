@@ -35,6 +35,9 @@ setup-basic:
 setup-avahi:
 	$(ANSIBLE) -i $(INVENTORY) $(ARGS) ansible/setup_avahi.yml
 
+setup-containerd:
+	$(ANSIBLE) -i $(INVENTORY) $(ARGS) ansible/setup_containerd.yml
+
 setup-kubernetes:
 	$(ANSIBLE) -i $(INVENTORY) $(ARGS) ansible/setup_kubernetes.yml
 

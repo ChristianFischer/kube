@@ -1,0 +1,108 @@
+---
+- name: Containerd configuration
+  hosts: master
+  become: true
+
+  tasks:
+    - name: create an empty file for the Containerd module
+      copy:
+        content: ""
+        dest: /etc/modules-load.d/containerd.conf
+        force: no
+
+    - name: configure modules for Containerd
+      blockinfile:
+        path: /etc/modules-load.d/containerd.conf
+        block: |
+          overlay
+          br_netfilter
+
+    - name: add Docker apt-key
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker-apt-keyring.asc
+        mode: '0644'
+        force: true
+
+    - name: add Docker's APT repository
+      apt_repository:
+        repo: "deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }} signed-by=/etc/apt/keyrings/docker-apt-keyring.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+        update_cache: yes
+
+    - name: install Containerd
+      apt:
+        name:
+          - containerd.io
+          - containernetworking-plugins
+        state: present
+
+    - name: create Containerd directory
+      file:
+        path: /etc/containerd
+        state: directory
+
+    - name: add Containerd configuration
+      shell: /usr/bin/containerd config default > /etc/containerd/config.toml
+      args:
+        creates: /etc/containerd/config.toml
+
+    - name: configuring the systemd cgroup driver for Containerd
+      lineinfile:
+        path: /etc/containerd/config.toml
+        regexp: '            SystemdCgroup = false'
+        line: '            SystemdCgroup = true'
+      notify:
+        - Restart containerd
+
+    # https://github.com/kubernetes/kubernetes/issues/125226
+    - name: containerd config enable_unprivileged_icmp = true
+      lineinfile:
+        path: /etc/containerd/config.toml
+        insertafter: '  [plugins."io.containerd.grpc.v1.cri"]'
+        regexp:      '    enable_unprivileged_icmp = false'
+        line:        '    enable_unprivileged_icmp = true'
+      notify:
+        - Restart containerd
+
+    # https://github.com/kubernetes/kubernetes/issues/125226
+    - name: containerd config enable_unprivileged_ports = true
+      lineinfile:
+        path: /etc/containerd/config.toml
+        insertafter: '  [plugins."io.containerd.grpc.v1.cri"]'
+        regexp:      '    enable_unprivileged_ports = false'
+        line:        '    enable_unprivileged_ports = true'
+      notify:
+        - Restart containerd
+
+
+    - name: enable the Containerd service and start it
+      systemd:
+        name: containerd
+        state: started
+        enabled: yes
+        daemon-reload: yes
+
+    - name: load br_netfilter kernel module
+      modprobe:
+        name: br_netfilter
+        state: present
+
+    - name: set bridge-nf-call-iptables
+      sysctl:
+        name: net.bridge.bridge-nf-call-iptables
+        value: 1
+
+    - name: set ip_forward
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+
+
+  handlers:
+    - name: Restart containerd
+      systemd:
+        name: containerd
+        state: restarted
+        daemon-reload: yes
+
