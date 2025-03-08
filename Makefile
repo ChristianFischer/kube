@@ -3,6 +3,7 @@ INVENTORY := ansible/inventory.ini
 ARGS := --diff
 
 ANSIBLE := ANSIBLE_STDOUT_CALLBACK=debug ansible-playbook
+HELM_INSTALL := helm upgrade --install --debug --atomic --wait
 
 
 all:
@@ -42,7 +43,26 @@ setup-kubernetes:
 	$(ANSIBLE) -i $(INVENTORY) $(ARGS) ansible/setup_kubernetes.yml
 
 deploy:
-	./scripts/deploy.sh
+	./scripts/deploy.sh | tee logs/deploy.log
+
+
+deploy-gitea:
+	helm repo add gitea-charts https://dl.gitea.com/charts/
+	$(HELM_INSTALL) gitea gitea-charts/gitea --create-namespace --namespace gitea
+
 
 reset-cluster:
-	./scripts/reset-cluster.sh
+	./scripts/reset-cluster.sh | tee logs/reset.log
+
+
+
+browse-longhorn:
+	kubectl port-forward service/longhorn-frontend 8080:80 -n longhorn-system
+
+
+browse-dashboard:
+	kubectl port-forward service/kubernetes-dashboard-kong-proxy 8443:443 -n kubernetes-dashboard
+
+
+dashboard-token:
+	kubectl -n kubernetes-dashboard create token admin-user

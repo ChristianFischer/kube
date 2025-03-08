@@ -27,6 +27,10 @@ providers:
   kubernetesIngress:
     enabled: true
 
+# Send anonymous usage data
+global:
+  sendAnonymousUsage: false
+
 logs:
   general:
     level: INFO

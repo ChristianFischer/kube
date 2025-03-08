@@ -1,0 +1,3 @@
+# disable default storage path
+defaultSettings:
+  defaultDataPath: ''

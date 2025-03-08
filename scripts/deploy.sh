@@ -8,18 +8,20 @@ echo -e "${TEXT_GREEN}Deploying Kubernetes components...${TEXT_RESET}"
 
 # Add Helm repositories
 echo -e "${TEXT_GREEN}Adding Helm repositories...${TEXT_RESET}"
+helm repo add flannel https://flannel-io.github.io/flannel/
 helm repo add traefik https://helm.traefik.io/traefik
 helm repo add projectcalico https://docs.tigera.io/calico/charts
+helm repo add longhorn https://charts.longhorn.io
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
 helm repo update
 
-# Deploy Ingress route for Kubernetes Dashboard
-echo -e "${TEXT_GREEN}Deploying basic configuration...${TEXT_RESET}"
-kubectl apply -f manifests/storage/rpcloud-persistent-storage.yml
+# Deploy Longhorn
+echo -e "${TEXT_GREEN}Deploying Longhorn...${TEXT_RESET}"
+$HELM_INSTALL longhorn longhorn/longhorn --namespace longhorn-system --create-namespace -f helm/longhorn-values.yaml
 
-# Deploy Calico CNI (replacing Flannel)
-echo -e "${TEXT_GREEN}Deploying Calico CNI...${TEXT_RESET}"
-$HELM_INSTALL calico projectcalico/tigera-operator --namespace tigera-operator --create-namespace
+# Deploy Flannel CNI
+echo -e "${TEXT_GREEN}Deploying Flannel CNI...${TEXT_RESET}"
+$HELM_INSTALL flannel --set podCidr="10.244.0.0/16" --create-namespace --namespace kube-flannel flannel/flannel
 
 # Deploy Traefik Ingress Controller
 echo -e "${TEXT_GREEN}Deploying Traefik Ingress Controller...${TEXT_RESET}"

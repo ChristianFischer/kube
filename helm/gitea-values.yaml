@@ -1,0 +1,8 @@
+global:
+  hostAliases: [
+                 "gitea.local"
+  ]
+
+gitlab:
+  ldap: [
+  ]
