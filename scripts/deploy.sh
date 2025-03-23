@@ -9,6 +9,7 @@ echo -e "${TEXT_GREEN}Deploying Kubernetes components...${TEXT_RESET}"
 # Add Helm repositories
 echo -e "${TEXT_GREEN}Adding Helm repositories...${TEXT_RESET}"
 helm repo add flannel https://flannel-io.github.io/flannel/
+helm repo add jetstack https://charts.jetstack.io
 helm repo add traefik https://helm.traefik.io/traefik
 helm repo add projectcalico https://docs.tigera.io/calico/charts
 helm repo add longhorn https://charts.longhorn.io
@@ -22,6 +23,10 @@ $HELM_INSTALL longhorn longhorn/longhorn --namespace longhorn-system --create-na
 # Deploy Flannel CNI
 echo -e "${TEXT_GREEN}Deploying Flannel CNI...${TEXT_RESET}"
 $HELM_INSTALL flannel --set podCidr="10.244.0.0/16" --create-namespace --namespace kube-flannel flannel/flannel
+
+# Deploy Cert Manager
+echo -e "${TEXT_GREEN}Deploying Cert Manager...${TEXT_RESET}"
+$HELM_INSTALL cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace -f helm/cert-manager-values.yaml --version v1.17.0
 
 # Deploy Traefik Ingress Controller
 echo -e "${TEXT_GREEN}Deploying Traefik Ingress Controller...${TEXT_RESET}"

@@ -1,0 +1,66 @@
+# cluster issuer to create the root certificate
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: rpcloud-root-ca-issuer-selfsigned
+spec:
+  selfSigned: {}
+---
+# the root certificate created by the issuer above
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rpcloud-root-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: rpcloud-root-ca
+  secretName: rpcloud-root-ca-secret
+  duration: 86400h
+  renewBefore: 43200h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: rpcloud-root-ca-issuer-selfsigned
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+# a second cluster issuer to create certificates
+# based on the root ca above
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: rpcloud-root-ca-issuer
+spec:
+  ca:
+    secretName: rpcloud-root-ca-secret
+---
+# Intermediate certificate to be used to create the actual certificates for TLS
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rpcloud-intermediate-ca1
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: rpcloud-intermediate-ca1
+  secretName: rpcloud-intermediate-ca1-secret
+  duration: 43800h # 5y
+  renewBefore: 35040h # 4y
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: rpcloud-root-ca-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+# Issuer to create TLS certificates based on the intermediate certificate above
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: rpcloud-intermediate-ca1-issuer
+spec:
+  ca:
+    secretName: rpcloud-intermediate-ca1-secret

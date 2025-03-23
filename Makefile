@@ -18,12 +18,16 @@ clean:
 	chmod 600 ~/.ssh/id_rsa
 	chmod 600 ~/.ssh/id_rsa.pub
 
-# creates a SSH Key and copies onto the target machine
-connect-ssh: ~/.ssh/id_rsa
+# performs the actual copy operation and stores a cookie file
+~/.ssh/id_rsa.rpcloud.cookie: ~/.ssh/id_rsa
 	ssh-copy-id ubuntu@rpcloud
+	touch ~/.ssh/id_rsa.rpcloud.cookie
+
+# creates a SSH Key and copies onto the target machine
+connect-ssh: ~/.ssh/id_rsa.rpcloud.cookie
 
 # copies the kubernetes config file from the node to the local user folder
-~/.kube/config: connect-ssh
+~/.kube/config: ~/.ssh/id_rsa.rpcloud.cookie
 	mkdir -p ~/.kube/
 	ssh ubuntu@rpcloud "sudo cat /etc/kubernetes/admin.conf" > ~/.kube/config
 
@@ -44,6 +48,10 @@ setup-kubernetes:
 
 deploy:
 	./scripts/deploy.sh | tee logs/deploy.log
+
+
+deploy-selfsigned-ca:
+	kubectl apply -f manifests/clusterissuer/rpcloud-selfsigned.yml
 
 
 deploy-gitea:
