@@ -1,0 +1,11 @@
+global:
+  ldapDomain: dc=fischernetz,dc=local
+  adminUser: "admin"
+  adminPassword: "admin123"
+  configUser: "admin"
+  configPassword: "admin123"
+
+phpldapadmin:
+  enabled: true
+  ingress:
+    enabled: false

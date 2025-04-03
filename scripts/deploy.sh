@@ -14,6 +14,7 @@ helm repo add traefik https://helm.traefik.io/traefik
 helm repo add projectcalico https://docs.tigera.io/calico/charts
 helm repo add longhorn https://charts.longhorn.io
 helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+helm repo add helm-openldap https://jp-gouin.github.io/helm-openldap/
 helm repo update
 
 # Deploy Longhorn
@@ -50,6 +51,11 @@ kubectl apply -f manifests/auth/dashboard-admin-user.yml
 # Get token for dashboard
 echo -e "${TEXT_GREEN}Getting token for dashboard login...${TEXT_RESET}"
 kubectl -n kubernetes-dashboard create token admin-user
+
+# Deploy OpenLDAP + phpldapadmin
+echo -e "${TEXT_GREEN}Deploying OpenLDAP...${TEXT_RESET}"
+$HELM_INSTALL openldap helm-openldap/openldap-stack-ha --namespace openldap --create-namespace -f helm/openldap-values.yml
+
 
 echo "
 ===========================================

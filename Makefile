@@ -72,5 +72,9 @@ browse-dashboard:
 	kubectl port-forward service/kubernetes-dashboard-kong-proxy 8443:443 -n kubernetes-dashboard
 
 
+browse-phpldapadmin:
+	kubectl port-forward service/openldap-phpldapadmin 8080:80 -n openldap
+
+
 dashboard-token:
 	kubectl -n kubernetes-dashboard create token admin-user
