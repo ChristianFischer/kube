@@ -5,6 +5,8 @@ ARGS := --diff
 ANSIBLE := ANSIBLE_STDOUT_CALLBACK=debug ansible-playbook
 HELM_INSTALL := helm upgrade --install --debug --atomic --wait
 
+include scripts/Makefile.deploy.mk
+
 
 all:
 
@@ -29,7 +31,20 @@ connect-ssh: ~/.ssh/id_rsa.rpcloud.cookie
 # copies the kubernetes config file from the node to the local user folder
 ~/.kube/config: ~/.ssh/id_rsa.rpcloud.cookie
 	mkdir -p ~/.kube/
-	ssh ubuntu@rpcloud "sudo cat /etc/kubernetes/admin.conf" > ~/.kube/config
+
+	# kubernetes
+	if ssh ubuntu@rpcloud "sudo cat /etc/kubernetes/admin.conf"; then \
+		ssh ubuntu@rpcloud "sudo cat /etc/kubernetes/admin.conf" > ~/.kube/config; \
+	fi
+
+	# k3s
+	if ssh ubuntu@rpcloud "sudo test -f /etc/rancher/k3s/k3s.yaml"; then \
+		ssh ubuntu@rpcloud "sudo cat /etc/rancher/k3s/k3s.yaml" > ~/.kube/config; \
+		sed -i 's|server: https://127.0.0.1:\([0-9]\+\)|server: https://rpcloud:\1|' ~/.kube/config; \
+	fi
+
+	# fail if the config file was not downloaded
+	test -f ~/.kube/config
 
 connect-kubernetes: ~/.kube/config
 
@@ -43,20 +58,11 @@ setup-avahi:
 setup-containerd:
 	$(ANSIBLE) -i $(INVENTORY) $(ARGS) ansible/setup_containerd.yml
 
-setup-kubernetes:
-	$(ANSIBLE) -i $(INVENTORY) $(ARGS) ansible/setup_kubernetes.yml
+setup-kubernetes-full:
+	$(ANSIBLE) -i $(INVENTORY) $(ARGS) ansible/setup_kubernetes_full.yml
 
-deploy:
-	./scripts/deploy.sh | tee logs/deploy.log
-
-
-deploy-selfsigned-ca:
-	kubectl apply -f manifests/clusterissuer/rpcloud-selfsigned.yml
-
-
-deploy-gitea:
-	helm repo add gitea-charts https://dl.gitea.com/charts/
-	$(HELM_INSTALL) gitea gitea-charts/gitea --create-namespace --namespace gitea
+setup-kubernetes-k3s:
+	$(ANSIBLE) -i $(INVENTORY) $(ARGS) ansible/setup_kubernetes_k3s.yml
 
 
 reset-cluster:
@@ -74,7 +80,3 @@ browse-dashboard:
 
 browse-phpldapadmin:
 	kubectl port-forward service/openldap-phpldapadmin 8080:80 -n openldap
-
-
-dashboard-token:
-	kubectl -n kubernetes-dashboard create token admin-user

@@ -25,7 +25,7 @@ This repository contains Helm charts and configuration files for setting up a Ku
 
 2. Run the deployment script:
    ```bash
-   ./scripts/deploy.sh
+   make deploy
    ```
 
 The script will:

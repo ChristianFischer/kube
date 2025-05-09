@@ -1,0 +1,48 @@
+---
+- name: Install Kubernetes
+  hosts: master
+  become: true
+
+  vars:
+    k3s_version: "v1.32.3"
+
+  tasks:
+    - name: disable SWAP (Kubeadm requirement)
+      shell: |
+        swapoff -a
+
+    - name: disable SWAP in fstab (Kubeadm requirement)
+      replace:
+        path: /etc/fstab
+        regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+        replace: '# \1'
+
+    - name: Get Installed K3S Version
+      command: k3s --version
+      register: k3s_version_out
+      changed_when: false
+      ignore_errors: true
+
+    - name: Set k3s installed version
+      when: not ansible_check_mode and k3s_version_out.rc == 0
+      ansible.builtin.set_fact:
+        installed_k3s_version: "{{ k3s_version_out.stdout_lines[0].split(' ')[2] }}"
+      #msg: "K3S Installed: {{ installed_k3s_version }}"
+
+    - name: Setup K3S
+      when: not ansible_check_mode and ( k3s_version_out.rc != 0 or installed_k3s_version is version(k3s_version, '<') )
+      block:
+        - name: Download Installer Script
+          get_url:
+            url: https://get.k3s.io/
+            timeout: 120
+            dest: /tmp/k3s-install.sh
+            owner: root
+            group: root
+            mode: 0700
+
+        - name: Install K3S
+          command:
+            cmd: /tmp/k3s-install.sh
+          environment:
+            INSTALL_K3S_VERSION: "{{ k3s_version }}"
