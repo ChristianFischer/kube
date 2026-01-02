@@ -13,6 +13,10 @@ tab_width = 4
 [{*.yml,*.yaml}]
 indent_size = 2
 
+[*.tf]
+indent_size = 2
+ij_hcl-terraform_property_alignment = on_equals
+
 [devcontainer.json]
 indent_size = 2
 

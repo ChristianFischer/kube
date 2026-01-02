@@ -5,7 +5,7 @@ ARGS := --diff
 ANSIBLE := ANSIBLE_STDOUT_CALLBACK=debug ansible-playbook
 HELM_INSTALL := helm upgrade --install --debug --atomic --wait
 
-include scripts/Makefile.deploy.mk
+include scripts/Makefile.terraform.mk
 
 
 all:
@@ -71,12 +71,19 @@ reset-cluster:
 
 
 browse-longhorn:
+	@echo "Open http://localhost:8080"
 	kubectl port-forward service/longhorn-frontend 8080:80 -n longhorn-system
 
 
 browse-dashboard:
+	@echo "+++ Dashboard Admin Token"
+	@terraform -chdir=terraform output -raw kubernetes-dashboard-admin-token
+	@echo ""
+	@echo "+++ END OF Dashboard Admin Token"
+	@echo "Open https://localhost:8443"
 	kubectl port-forward service/kubernetes-dashboard-kong-proxy 8443:443 -n kubernetes-dashboard
 
 
 browse-phpldapadmin:
+	@echo "Open https://localhost:8080"
 	kubectl port-forward service/openldap-phpldapadmin 8080:80 -n openldap

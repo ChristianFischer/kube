@@ -1,8 +1,51 @@
 global:
-  hostAliases: [
-                 "gitea.local"
-  ]
+  storageClass: "longhorn"
 
-gitlab:
+#  hostAliases:
+#    - ip: "127.0.0.1"
+#      hostnames:
+#        - "gitea.local"
+
+valkey-cluster:
+  enabled: false
+
+valkey:
+  enabled: true
+
+postgresql:
+  enabled: true
+  persistence:
+    enabled: true
+    storageClass: "longhorn"
+    accessMode: ReadWriteOnce
+    size: 10Gi
+
+postgresql-ha:
+  enabled: false
+
+persistence:
+  enabled: true
+  storageClass: "longhorn"
+  accessMode: ReadWriteOnce
+  size: 100Gi
+
+service:
+  http:
+    type: ClusterIP
+    port: 3000
+  ssh:
+    port: 22
+
+gitea:
+  server:
+    DOMAIN: gitea.local
+    PROTOCOL: https
+    ROOT_URL: https://gitea.local
+  config:
+    database:
+      DB_TYPE: postgres
+    indexer:
+      ISSUE_INDEXER_TYPE: bleve
+      REPO_INDEXER_ENABLED: true
   ldap: [
   ]

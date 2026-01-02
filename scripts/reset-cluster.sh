@@ -44,8 +44,11 @@ ssh ${REMOTE_USER}@${TARGET_HOST} << 'SSH'
     sudo bash << SUDO
         set -ex
 
-        # reset kubeadm
-        kubeadm reset -f
+        ## reset using kubeadm (not with k3s)
+        #kubeadm reset -f
+
+        # uninstall k3s
+        /usr/local/bin/k3s-uninstall.sh
 
         # Stop and disable services
         systemctl stop kubelet

@@ -14,6 +14,9 @@
     },
     "ghcr.io/devcontainers-extra/features/ansible": {
       "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/terraform": {
+      "version": "latest"
     }
   },
   "postCreateCommand": "kubectl version --client=true && helm version",
@@ -28,19 +31,23 @@
         "ms-azuretools.vscode-docker"
       ]
     },
-    "intellij": {
+    "jetbrains": {
+      "backend": "IntelliJ",
+      "plugins": [
+        "org.editorconfig.editorconfigjetbrains",
+        "name.kropp.intellij.makefile",
+        "com.intellij.kubernetes",
+        "org.intellij.plugins.hcl"
+      ],
       "settings": {
-        "editor.formatOnSave": true,
-        "kubernetes:enabled": true,
-        "docker:enabled": true
       }
     }
   },
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
-  forwardPorts: [
+  "forwardPorts": [
     8080,
-    8443,
+    8443
   ]
 }

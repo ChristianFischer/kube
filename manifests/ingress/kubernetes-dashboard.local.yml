@@ -1,26 +1,27 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: gitea-ingressroute
-  namespace: gitea
+  name: kubernetes-dashboard-ingressroute
+  namespace: kubernetes-dashboard
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     cert-manager.io/cluster-issuer: rpcloud-intermediate-ca1-issuer
-    cert-manager.io/common-name: gitea.local
+    cert-manager.io/common-name: kubernetes-dashboard.local
+    #cert-manager.io/cluster-issuer: internal-ca
 spec:
   ingressClassName: traefik
   rules:
-    - host: gitea.local
+    - host: kubernetes-dashboard.local
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: gitea-http
+                name: kubernetes-dashboard-kong-proxy
                 port:
-                  number: 3000
+                  number: 443
   tls:
     - hosts:
-        - gitea.local
-      secretName: gitea-cert-secret
+        - kubernetes-dashboard.local
+      secretName: kubernetes-dashboard-cert-secret

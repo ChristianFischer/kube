@@ -4,7 +4,7 @@
   become: true
 
   vars:
-    k3s_version: "v1.32.3"
+    k3s_version: "v1.35.0+k3s1"
 
   tasks:
     - name: disable SWAP (Kubeadm requirement)
