@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nextcloud-ingressroute
+  namespace: nextcloud
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: rpcloud-intermediate-ca1-issuer
+    cert-manager.io/common-name: nextcloud.local
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: nextcloud.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nextcloud
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - nextcloud.local
+      secretName: nextcloud-cert-secret

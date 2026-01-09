@@ -23,7 +23,7 @@
 
           [Service]
           Type=simple
-          ExecStart=/bin/bash -c "sleep 5 && /usr/bin/avahi-publish -a -R %i.local $(avahi-resolve -4 -n %H.local | cut -f 2)"
+          ExecStart=/bin/bash -c "sleep 5 && /usr/bin/avahi-publish -a -R %i.local $(hostname -I | cut -d ' ' -f 1)"
 
           [Install]
           WantedBy=multi-user.target
@@ -36,17 +36,15 @@
         state: started
 
 
-    - name: Enable and start Hostname kubernetes-dashboard.local
+    - name: Enable Hostname Aliases
       service:
-        name: alias-hostname@kubernetes-dashboard
+        name: "alias-hostname@{{ item }}"
         enabled: yes
         state: started
-
-    - name: Enable Hostname gitea.local
-      service:
-        name: alias-hostname@gitea
-        enabled: yes
-        state: started
+      loop:
+        - kubernetes-dashboard
+        - gitea
+        - nextcloud
 
 
   handlers:

@@ -1,0 +1,38 @@
+persistence:
+  enabled: true
+  storageClass: "longhorn"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  nextcloudData:
+    enabled: true
+    storageClass: "longhorn"
+    accessMode: ReadWriteOnce
+    size: 100Gi
+
+cronjob:
+  enabled: true
+
+nextcloud:
+  host: nextcloud.local
+  livenessProbe:
+    httpGet:
+      httpHeaders:
+        - name: Host
+          value: nextcloud.local
+  readinessProbe:
+    httpGet:
+      httpHeaders:
+        - name: Host
+          value: nextcloud.local
+  configs:
+    proxy.config.php: |-
+      <?php
+      $CONFIG = array (
+        'trusted_domains' => array('nextcloud.local', 'localhost', '127.0.0.1'),
+      );
+
+  internalDatabase:
+    enabled: true
+
+  externalDatabase:
+    enabled: false
