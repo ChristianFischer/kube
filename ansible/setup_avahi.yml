@@ -43,7 +43,7 @@
         state: started
       loop:
         - kubernetes-dashboard
-        - gitea
+        - git
         - nextcloud
 
 

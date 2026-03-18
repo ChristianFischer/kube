@@ -1,0 +1,13 @@
+runner:
+  config:
+    create: true
+    existingInitSecret: forgejo-runner-init-config
+
+    file:
+      runner:
+        insecure: true # ignore self signed cert for now
+        labels: [
+          "rpcloud",
+          "self-hosted",
+          "docker",
+        ]

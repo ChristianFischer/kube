@@ -1,26 +1,26 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: gitea-ingressroute
-  namespace: gitea
+  name: forgejo-ingressroute
+  namespace: forgejo
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     cert-manager.io/cluster-issuer: rpcloud-intermediate-ca1-issuer
-    cert-manager.io/common-name: gitea.local
+    cert-manager.io/common-name: git.local
 spec:
   ingressClassName: traefik
   rules:
-    - host: gitea.local
+    - host: git.local
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: gitea-http
+                name: forgejo-http
                 port:
                   number: 3000
   tls:
     - hosts:
-        - gitea.local
-      secretName: gitea-cert-secret
+        - git.local
+      secretName: forgejo-cert-secret

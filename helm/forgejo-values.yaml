@@ -1,0 +1,57 @@
+global:
+  storageClass: "longhorn"
+
+valkey-cluster:
+  enabled: false
+
+valkey:
+  enabled: true
+
+#postgresql:
+#  enabled: true
+#  persistence:
+#    enabled: true
+#    storageClass: "longhorn"
+#    accessMode: ReadWriteOnce
+#    size: 10Gi
+
+postgresql-ha:
+  enabled: false
+
+persistence:
+  enabled: true
+  storageClass: "longhorn"
+  accessMode: ReadWriteOnce
+  size: 100Gi
+
+service:
+  http:
+    type: ClusterIP
+    port: 3000
+  ssh:
+    port: 22
+
+gitea:
+  admin:
+    # existingSecret: gitea-admin-secret
+    existingSecret:
+    username: gitea_admin
+    password: ''
+    email: 'gitea@local.domain'
+    passwordMode: keepUpdated
+
+  config:
+    server:
+      DOMAIN: git.local
+      PROTOCOL: http # HTTPS is done by traefik
+      ROOT_URL: https://git.local
+
+    #database:
+    #  DB_TYPE: postgres
+
+    indexer:
+      ISSUE_INDEXER_TYPE: bleve
+      REPO_INDEXER_ENABLED: true
+
+  ldap: [
+  ]

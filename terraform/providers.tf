@@ -17,6 +17,13 @@ provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
+data "kubernetes_service_v1" "traefik" {
+  metadata {
+    name      = "traefik"
+    namespace = "kube-system"
+  }
+}
+
 provider "helm" {
   kubernetes {
     config_path = "~/.kube/config"
